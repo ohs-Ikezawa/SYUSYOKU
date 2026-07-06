@@ -1,0 +1,79 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB8FB94-0331-C093-9284-B130033955BF}|Assembly-CSharp.csproj|C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\assets\\script\\player\\player.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB8FB94-0331-C093-9284-B130033955BF}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\player\\player.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB8FB94-0331-C093-9284-B130033955BF}|Assembly-CSharp.csproj|c:\\users\\wazuo\\onedrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\syusyoku\\assets\\script\\reachablearea.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB8FB94-0331-C093-9284-B130033955BF}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\reachablearea.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5DB8FB94-0331-C093-9284-B130033955BF}|Assembly-CSharp.csproj|C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\assets\\script\\player\\playermove.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5DB8FB94-0331-C093-9284-B130033955BF}|Assembly-CSharp.csproj|solutionrelative:assets\\script\\player\\playermove.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ReachableArea.cs",
+              "DocumentMoniker": "C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\Assets\\Script\\ReachableArea.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\ReachableArea.cs",
+              "ToolTip": "C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\Assets\\Script\\ReachableArea.cs",
+              "RelativeToolTip": "Assets\\Script\\ReachableArea.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T05:39:37.557Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PlayerMove.cs",
+              "DocumentMoniker": "C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\Assets\\Script\\Player\\PlayerMove.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Player\\PlayerMove.cs",
+              "ToolTip": "C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\Assets\\Script\\Player\\PlayerMove.cs",
+              "RelativeToolTip": "Assets\\Script\\Player\\PlayerMove.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAkwCUAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-27T06:55:53.142Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Player.cs",
+              "DocumentMoniker": "C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\Assets\\Script\\Player\\Player.cs",
+              "RelativeDocumentMoniker": "Assets\\Script\\Player\\Player.cs",
+              "ToolTip": "C:\\Users\\wazuo\\OneDrive\\\u30C7\u30B9\u30AF\u30C8\u30C3\u30D7\\\u5C31\u8077\u4F5C\u54C1\\SYUSYOKU\\Assets\\Script\\Player\\Player.cs",
+              "RelativeToolTip": "Assets\\Script\\Player\\Player.cs",
+              "ViewState": "AgIAAH8AAAAAAAAAAAAowNEAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-25T07:36:40.564Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
