@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
@@ -11,6 +12,12 @@ public class Player : MonoBehaviour
     [Tooltip("ロープのプレハブ")] public GameObject RopePiece;
     [Tooltip("ロープを持つ位置")] public GameObject RopePosition;
     [Tooltip("ロープの設置間隔")] public float RopeInterval;
+    [Tooltip("ロープのたるみ")]   public float RopeSagging;
+
+    [Header("地面判定")]
+    [Tooltip("地面のレイヤー")] 　public LayerMask GroundLayer;
+    [Tooltip("レイを出す高さ")]   public float GroundCheckHeight = 5.0f;
+    [Tooltip("地面めり込み防止")] public float RopeGroundOffset = 0.05f;
 
     private List<GameObject> RopePieces = new List<GameObject>();
 
@@ -168,7 +175,11 @@ public class Player : MonoBehaviour
         if (RopeInterval <= 0)
             RopeInterval = 0.2f;
 
-        int neededCount = Mathf.CeilToInt(distance / RopeInterval);
+        //ロープの最大値
+        float ropeLength = Mathf.Max(distance, RopeMaxDistance);
+
+        //ロープの欠片の数を決定
+        int neededCount = Mathf.CeilToInt(ropeLength / RopeInterval);
 
         while (RopePieces.Count < neededCount)
         {
@@ -183,16 +194,31 @@ public class Player : MonoBehaviour
             Destroy(lastPiece);
         }
 
+        //ロープのあまり具合(近いほど大きくなる)
+        float stack = ropeLength - distance;
+
+        //どれくらいたるんでるか
+        float segRate = Mathf.Clamp01(stack / ropeLength);
+        float segAmount = segRate * RopeSagging;
+
         for (int i = 0; i < RopePieces.Count; i++)
         {
             float t = (i + 1f) / (RopePieces.Count + 1f);
 
-            Vector3 position = Vector3.Lerp(start, end, t);
+            Vector3 position = GetSaggingRopePoint(start, end, t, segAmount);
+            //ロープのめり込み補正
+            position = ClampToGround(position);
             RopePieces[i].transform.position = position;
 
-            Vector3 direction = end - start;
+            float nextT = Mathf.Clamp01(t + 0.01f);
+            float prevT = Mathf.Clamp01(t - 0.01f);
 
-            if (direction != Vector3.zero)
+            Vector3 nextPos = GetSaggingRopePoint(start,end,nextT, segAmount);
+            Vector3 prevPos = GetSaggingRopePoint(start,end,prevT, segAmount);
+
+            Vector3 direction = nextPos - prevPos;
+
+            if (direction.sqrMagnitude > 0.000001f)
             {
                 RopePieces[i].transform.rotation = Quaternion.LookRotation(direction);
             }
@@ -218,6 +244,32 @@ public class Player : MonoBehaviour
         }
 
         return transform.position;
+    }
+
+    private Vector3 GetSaggingRopePoint(Vector3 start,Vector3 end,float t,float Seg)
+    {
+        Vector3 LinePos = Vector3.Lerp( start , end , t );
+
+        float curve = Mathf.Sin(t * Mathf.PI);
+
+        return LinePos + Vector3.down * curve * Seg;
+    }
+
+    private Vector3 ClampToGround(Vector3 position)
+    {
+        //地面めり込みを防止する関数
+        Vector3 rayStart = position + Vector3.up * GroundCheckHeight;
+
+        if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, GroundCheckHeight * 2f, GroundLayer))
+        {
+            //ロープが地面レイヤーの物体より下にあるなら上に補正する
+            if (position.y < hit.point.y + RopeGroundOffset)
+            {
+                position.y = hit.point.y + RopeGroundOffset;
+            }
+        }
+
+        return position;
     }
 }
 

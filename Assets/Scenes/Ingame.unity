@@ -251,7 +251,13 @@ MonoBehaviour:
   RopePiece: {fileID: 1488697404725418916, guid: ea3128a171f996640bd7e7de9ec773f9, type: 3}
   RopePosition: {fileID: 922832422}
   RopeInterval: 0.2
-  RopeMaxDistance: 5
+  RopeSagging: 1
+  GroundLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  GroundCheckHeight: 3
+  RopeGroundOffset: 0.05
+  RopeMaxDistance: 8
   RopeMinDistance: 2
   RopeSpring: 50
   RopeDamper: 5
@@ -560,7 +566,7 @@ GameObject:
   - component: {fileID: 962226350}
   - component: {fileID: 962226349}
   - component: {fileID: 962226348}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
