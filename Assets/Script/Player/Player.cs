@@ -13,6 +13,8 @@ public class Player : MonoBehaviour
     [Tooltip("ロープを持つ位置")] public GameObject RopePosition;
     [Tooltip("ロープの設置間隔")] public float RopeInterval;
     [Tooltip("ロープのたるみ")]   public float RopeSagging;
+    [Tooltip("ロープの追従速度")] public float RopeFollowSpeed = 20.0f;
+    [Tooltip("欠片のディレイ")]   public float RopePieceDelay = 0.08f;
 
     [Header("地面判定")]
     [Tooltip("地面のレイヤー")] 　public LayerMask GroundLayer;
@@ -206,9 +208,21 @@ public class Player : MonoBehaviour
             float t = (i + 1f) / (RopePieces.Count + 1f);
 
             Vector3 position = GetSaggingRopePoint(start, end, t, segAmount);
+
             //ロープのめり込み補正
             position = ClampToGround(position);
-            RopePieces[i].transform.position = position;
+
+            //欠片にディレイを掛ける
+            float delayRate = 1.0f + i * RopePieceDelay;
+            float followSpeed = RopeFollowSpeed * delayRate;
+
+            //フレームレートに依存しにくいようにする
+            float lerpRate = 1.0f - Mathf.Exp(-followSpeed * Time.deltaTime);
+
+            RopePieces[i].transform.position =
+                Vector3.Lerp(RopePieces[i].transform.position,
+                             position,
+                             lerpRate);
 
             float nextT = Mathf.Clamp01(t + 0.01f);
             float prevT = Mathf.Clamp01(t - 0.01f);
