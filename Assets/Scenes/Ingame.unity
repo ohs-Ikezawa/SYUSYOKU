@@ -214,6 +214,65 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 21.231, y: 0, z: 0}
+--- !u!1 &444825067
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 444825068}
+  - component: {fileID: 444825069}
+  m_Layer: 0
+  m_Name: RopeAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &444825068
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 444825067}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 922832423}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &444825069
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 444825067}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &696782930
 GameObject:
   m_ObjectHideFlags: 0
@@ -251,18 +310,27 @@ MonoBehaviour:
   RopePiece: {fileID: 1488697404725418916, guid: ea3128a171f996640bd7e7de9ec773f9, type: 3}
   RopePosition: {fileID: 922832422}
   RopeInterval: 0.2
-  RopeSagging: 1
-  RopeFollowSpeed: 15
-  RopePieceDelay: 0.15
+  RopeMaxDistance: 8
+  RopeSwingForce: 4
+  RopeWholeSwingForce: 1.4
+  RopeObjectDamping: 0.94
+  RopeObjectMaxSpeed: 35
+  SwingRight: 0
+  IsSwing: 0
+  RopeSwingRadius: 0.9
+  RopeSwingForwardOffset: 0
+  RopeSwingArcDepth: 0.9
+  RopeSwingTime: 0.2
+  RopeWhipSpeed: 10
+  WhipReturnSpeed: 3
+  RopeWhipAngle: 15
+  RopeWhipDelay: 0.3
+  RopeConstraintIteration: 20
   GroundLayer:
     serializedVersion: 2
     m_Bits: 128
   GroundCheckHeight: 3
   RopeGroundOffset: 0.05
-  RopeMaxDistance: 8
-  RopeMinDistance: 2
-  RopeSpring: 50
-  RopeDamper: 5
 --- !u!65 &696782933
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -389,7 +457,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1efc1099789dd2d4cab5bd56cb8f8c2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 13
+  speed: 15
   deadzone: 0.1
 --- !u!1 &916559167
 GameObject:
@@ -553,7 +621,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 444825068}
   m_Father: {fileID: 696782936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &962226347
