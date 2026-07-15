@@ -65,9 +65,12 @@
     <Compile Include="Assets\Script\Test\RopePiece.cs" />
     <Compile Include="Assets\Script\ReachableArea.cs" />
     <Compile Include="Assets\Script\Player\Rope.cs" />
+    <Compile Include="Assets\Script\Object\MediumObject.cs" />
+    <Compile Include="Assets\Script\Object\ObjectBase.cs" />
     <Compile Include="Assets\Script\Test\RopeGenerator.cs" />
+    <Compile Include="Assets\Script\Object\LightObject.cs" />
     <Compile Include="Assets\Script\Player\PlayerMove.cs" />
-    <Compile Include="Assets\Script\Object\Object.cs" />
+    <Compile Include="Assets\Script\Object\HeavyObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

@@ -27,7 +27,7 @@ public class RopeGenerator : MonoBehaviour
     [Tooltip("1回のクリックで振る力を加える時間です。")]
     public float SwingTime = 0.35f;
 
-    [Tooltip("横軸を時間、縦軸を角速度倍率としてスイングの重さを設定します。")]
+    [Tooltip("接続したObjectのSwingCurveが空の場合に使用する、予備のスイング速度曲線です。")]
     public AnimationCurve SwingSpeedCurve = new AnimationCurve(
         new Keyframe(0f, 0f),
         new Keyframe(0.25f, 0.5f),
@@ -37,6 +37,9 @@ public class RopeGenerator : MonoBehaviour
 
     [Tooltip("指定角度へ到達した後の減速開始時の強さです。停止へ近づくほど減速が緩やかになります。")]
     public float SwingFollowThroughDeceleration = 720f;
+
+    [Tooltip("指定角度へ到達した後、減速中に追加で回転できる最大角度です。0以下で制限しません。")]
+    public float SwingFollowThroughMaxAngle = 45f;
 
     [Tooltip("曲線の終端速度が小さい場合でも、フォロースルーを発生させる最低角速度です。")]
     public float SwingMinimumFollowThroughSpeed = 60f;
@@ -70,11 +73,13 @@ public class RopeGenerator : MonoBehaviour
     [Tooltip("指定角度へ到達した時点で、通常のロープ牽引をどの程度混ぜるかを設定します。")]
     public float SwingPullBlendAtRotationEnd = 0.4f;
 
-    [Tooltip("接続したオブジェクトの最大速度です。")]
+    [Tooltip("接続ObjectのMaxSpeedが0以下の場合に使用する、予備の最大移動速度です。")]
     public float MaxObjectSpeed = 20f;
 
     [Tooltip("スイング中のオブジェクトがPlayerへ入り込まないための最小半径です。")]
     public float PlayerAvoidanceRadius = 1.25f;
+
+    public ObjectBase ConnectedObject { get; private set; }
 
     private readonly List<RopePiece> RopePieces = new List<RopePiece>();
 
@@ -206,6 +211,27 @@ public class RopeGenerator : MonoBehaviour
         {
             Debug.LogWarning("接続するオブジェクトに Rigidbody がありません。");
             return;
+        }
+
+        ConnectedObject = nearestArea.GetComponentInParent<ObjectBase>();
+
+        if (ConnectedObject == null)
+        {
+            ConnectedObject = targetRb.GetComponent<ObjectBase>();
+        }
+
+        if (ConnectedObject == null)
+        {
+            Debug.LogWarning(
+                "接続したオブジェクトに ObjectBase がないため、" +
+                "RopeGenerator の予備カーブを使用します。");
+        }
+        else if (ConnectedObject.SwingCurve == null ||
+                 ConnectedObject.SwingCurve.length == 0)
+        {
+            Debug.LogWarning(
+                ConnectedObject.name +
+                " の SwingCurve が空のため、RopeGenerator の予備カーブを使用します。");
         }
 
         connectRb = targetRb;
@@ -372,6 +398,9 @@ public class RopeGenerator : MonoBehaviour
         swingAngularVelocity = PreserveSwingMomentum
             ? Mathf.Max(0f, signedAngularVelocity * swingDirection)
             : 0f;
+        swingAngularVelocity = Mathf.Min(
+            swingAngularVelocity,
+            GetMaximumSwingAngularVelocity());
         swingRadialVelocity = PreserveSwingMomentum
             ? Vector3.Dot(relativeVelocity, swingStartDirection)
             : 0f;
@@ -406,7 +435,10 @@ public class RopeGenerator : MonoBehaviour
                 0f,
                 swingFollowThroughDuration - swingFollowThroughElapsedTime);
             float stepTime = Mathf.Min(Time.fixedDeltaTime, remainingTime);
-            float previousAngularVelocity = swingAngularVelocity;
+            float maximumAngularVelocity = GetMaximumSwingAngularVelocity();
+            float previousAngularVelocity = Mathf.Min(
+                swingAngularVelocity,
+                maximumAngularVelocity);
 
             swingFollowThroughElapsedTime += stepTime;
 
@@ -420,6 +452,9 @@ public class RopeGenerator : MonoBehaviour
                 swingFollowThroughStartVelocity *
                 remainingRate *
                 remainingRate;
+            swingAngularVelocity = Mathf.Min(
+                swingAngularVelocity,
+                maximumAngularVelocity);
             swingTravelAngle +=
                 (previousAngularVelocity + swingAngularVelocity) *
                 0.5f *
@@ -445,6 +480,9 @@ public class RopeGenerator : MonoBehaviour
             float desiredAngularVelocity = swingCurveArea > 0.0001f
                 ? targetAngle / (duration * swingCurveArea) * speedMultiplier
                 : targetAngle / duration;
+            desiredAngularVelocity = Mathf.Min(
+                desiredAngularVelocity,
+                GetMaximumSwingAngularVelocity());
 
             float blend = SwingVelocityBlendTime <= 0f
                 ? 1f
@@ -454,6 +492,9 @@ public class RopeGenerator : MonoBehaviour
                 swingAngularVelocity,
                 desiredAngularVelocity,
                 blend);
+            swingAngularVelocity = Mathf.Min(
+                swingAngularVelocity,
+                GetMaximumSwingAngularVelocity());
 
             float remainingAngle = targetAngle - swingTravelAngle;
             float deltaAngle = Mathf.Min(
@@ -509,6 +550,8 @@ public class RopeGenerator : MonoBehaviour
             ropeTipPosition = ClampOutsidePlayer(ropeTipPosition);
         }
 
+        ropeTipPosition = LimitSwingTargetSpeed(ropeTipPosition);
+
         UpdateSaggingRope(RopeHead.transform.position, ropeTipPosition);
 
         connectRb.MovePosition(ropeTipPosition);
@@ -525,26 +568,59 @@ public class RopeGenerator : MonoBehaviour
         swingAngularVelocity = Mathf.Max(
             swingAngularVelocity,
             Mathf.Max(0f, SwingMinimumFollowThroughSpeed));
+        swingAngularVelocity = Mathf.Min(
+            swingAngularVelocity,
+            GetMaximumSwingAngularVelocity());
         swingFollowThroughStartVelocity = swingAngularVelocity;
         swingFollowThroughElapsedTime = 0f;
 
         float deceleration = Mathf.Max(
             0.01f,
             SwingFollowThroughDeceleration);
+        float naturalDuration =
+            swingFollowThroughStartVelocity * 2f / deceleration;
+
+        if (SwingFollowThroughMaxAngle > 0f &&
+            swingFollowThroughStartVelocity > 0.0001f)
+        {
+            float angleLimitedDuration =
+                SwingFollowThroughMaxAngle * 3f /
+                swingFollowThroughStartVelocity;
+            naturalDuration = Mathf.Min(
+                naturalDuration,
+                angleLimitedDuration);
+        }
+
         swingFollowThroughDuration = Mathf.Max(
             Time.fixedDeltaTime,
-            swingFollowThroughStartVelocity * 2f / deceleration);
+            naturalDuration);
         isSwingFollowThrough = true;
     }
 
     private float EvaluateSwingSpeedCurve(float timeRate)
     {
-        if (SwingSpeedCurve == null || SwingSpeedCurve.length == 0)
+        AnimationCurve activeSwingCurve = GetActiveSwingCurve();
+
+        if (activeSwingCurve == null || activeSwingCurve.length == 0)
         {
             return 1f;
         }
 
-        return Mathf.Max(0f, SwingSpeedCurve.Evaluate(Mathf.Clamp01(timeRate)));
+        return Mathf.Max(
+            0f,
+            activeSwingCurve.Evaluate(Mathf.Clamp01(timeRate)));
+    }
+
+    private AnimationCurve GetActiveSwingCurve()
+    {
+        if (ConnectedObject != null &&
+            ConnectedObject.SwingCurve != null &&
+            ConnectedObject.SwingCurve.length > 0)
+        {
+            return ConnectedObject.SwingCurve;
+        }
+
+        return SwingSpeedCurve;
     }
 
     private float CalculateSwingCurveArea(float endTimeRate)
@@ -657,12 +733,54 @@ public class RopeGenerator : MonoBehaviour
 
     private void LimitObjectSpeed()
     {
-        if (MaxObjectSpeed <= 0f)
+        float maximumSpeed = GetActiveMaximumSpeed();
+
+        if (maximumSpeed <= 0f)
         {
             return;
         }
 
-        connectRb.velocity = Vector3.ClampMagnitude(connectRb.velocity, MaxObjectSpeed);
+        connectRb.velocity = Vector3.ClampMagnitude(
+            connectRb.velocity,
+            maximumSpeed);
+    }
+
+    private float GetActiveMaximumSpeed()
+    {
+        if (ConnectedObject != null && ConnectedObject.MaxSpeed > 0f)
+        {
+            return ConnectedObject.MaxSpeed;
+        }
+
+        return Mathf.Max(0f, MaxObjectSpeed);
+    }
+
+    private float GetMaximumSwingAngularVelocity()
+    {
+        float maximumSpeed = GetActiveMaximumSpeed();
+
+        if (maximumSpeed <= 0f)
+        {
+            return Mathf.Infinity;
+        }
+
+        float effectiveRadius = Mathf.Max(0.1f, swingRadius);
+        return maximumSpeed / effectiveRadius * Mathf.Rad2Deg;
+    }
+
+    private Vector3 LimitSwingTargetSpeed(Vector3 targetPosition)
+    {
+        float maximumSpeed = GetActiveMaximumSpeed();
+
+        if (maximumSpeed <= 0f)
+        {
+            return targetPosition;
+        }
+
+        return Vector3.MoveTowards(
+            connectRb.position,
+            targetPosition,
+            maximumSpeed * Time.fixedDeltaTime);
     }
 
     private void SetPieceCollidersEnabled(RopePiece piece, bool isEnabled)
@@ -856,6 +974,7 @@ public class RopeGenerator : MonoBehaviour
     private void Disconnect()
     {
         connectRb = null;
+        ConnectedObject = null;
         swingElapsedTime = 0f;
         swingTravelAngle = 0f;
         swingAngularVelocity = 0f;
