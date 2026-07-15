@@ -4,43 +4,42 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [Header("ロープの設定")]
-    [Tooltip("ロープのプレハブ")] public GameObject RopePiece;
-    [Tooltip("ロープを持つ位置")] public GameObject RopePosition;
-    [Tooltip("ロープの設置間隔")] public float RopeInterval = 0.2f;
-    [Tooltip("ロープの固定長")] public float RopeMaxDistance = 3.0f;
-    [Tooltip("ロープ先端の速度をオブジェクトに伝える強さ")] public float RopeSwingForce = 4.0f;
-    [Tooltip("持ち手の動きをロープ全体に伝える強さ")] public float RopeWholeSwingForce = 1.4f;
-    [Tooltip("オブジェクトの速度減衰")] public float RopeObjectDamping = 0.94f;
-    [Tooltip("オブジェクトの最大速度")] public float RopeObjectMaxSpeed = 35.0f;
+    [Tooltip("ロープ1個分の見た目として生成するプレハブです。")] public GameObject RopePiece;
+    [Tooltip("ロープの親になる持ち手です。子に RopeAnchor がある場合は、その位置をロープの根元として使います。")] public GameObject RopePosition;
+    [Tooltip("ロープの欠片同士の間隔です。小さいほど滑らかになりますが、生成数と計算量が増えます。")] public float RopeInterval = 0.2f;
+    [Tooltip("ロープ全体の固定長です。ロープはこの長さを超えないように補正されます。")] public float RopeMaxDistance = 3.0f;
+    [Tooltip("スイング中にロープ先端の回転速度をオブジェクトへ伝える強さです。大きいほど振り回す力が強くなります。")] public float RopeSwingForce = 4.0f;
+    [Tooltip("スイング中に持ち手の動きをロープ全体へ伝える強さです。大きいほど根元の動きがロープ全体へ強く伝わります。")] public float RopeWholeSwingForce = 1.4f;
+    [Tooltip("スイングしていない時に、プレイヤー移動で生まれた力をロープへ伝える強さです。オブジェクトへ直接ではなく、ロープの欠片へ順番に伝わります。")] public float RopeMoveTransmitPower = 0.35f;
+    [Tooltip("ロープの欠片へ伝わる力が、先端へ行くほどどれくらい弱くなるかです。小さいほど先端に届く力が弱くなります。")] public float RopeForceDecay = 0.85f;
+    [Tooltip("オブジェクトの速度を毎フレーム弱める割合です。1に近いほど止まりにくく、0に近いほどすぐ減速します。")] public float RopeObjectDamping = 0.94f;
+    [Tooltip("ロープに繋がったオブジェクトの最大速度です。暴れすぎる場合はこの値を下げます。")] public float RopeObjectMaxSpeed = 35.0f;
 
     [Header("スイングの設定")]
-    [Tooltip("左右どちらに振るか")] public bool SwingRight = false;
-    [Tooltip("スイング中か")] public bool IsSwing = false;
-    [Tooltip("スイングの半径")] public float RopeSwingRadius = 0.9f;
-    [Tooltip("持ち手の前方向の基準位置")] public float RopeSwingForwardOffset = 0.0f;
-    [Tooltip("持ち手が弧を描く前後幅")] public float RopeSwingArcDepth = 0.9f;
-    [Tooltip("何秒かけて振るか")] public float RopeSwingTime = 0.2f;
+    [Tooltip("次のクリックで右方向に振るかを表します。Always Right Hand Swing がオフの時はクリックごとに反転します。")] public bool SwingRight = false;
+    [Tooltip("オンにすると左右交互ではなく、クリックするたび常に右手方向へ180度ずつ回します。")] public bool AlwaysRightHandSwing = false;
+    [Tooltip("現在スイング処理中かを表示します。基本的には確認用で、プレイ中に自動で切り替わります。")] public bool IsSwing = false;
+    [Tooltip("RopeAnchor が RopePosition の周りを回る横方向の半径です。大きいほど大振りになります。")] public float RopeSwingRadius = 0.9f;
+    [Tooltip("RopeAnchor が弧を描く時の前後方向の半径です。大きいほど円に近く、小さいほど横振りに近くなります。")] public float RopeSwingArcDepth = 0.9f;
+    [Tooltip("クリック後、180度振り終わるまでの時間です。小さいほど素早く強いスイングになります。")] public float RopeSwingTime = 0.2f;
 
     [Header("鞭のしなり設定")]
-    [Tooltip("しなる速さ")] public float RopeWhipSpeed = 10f;
-    [Tooltip("しなりが戻る速さ")] public float WhipReturnSpeed = 3f;
-    [Tooltip("しなる角度")] public float RopeWhipAngle = 15f;
-    [Tooltip("先端に行くほどどれくらい遅れるか")] public float RopeWhipDelay = 0.3f;
+    [Tooltip("スイングの弧運動をロープへ波として伝える強さです。大きいほど鞭のようにしなります。")] public float RopeWhipSpeed = 10f;
+    [Tooltip("ロープ先端へスイングが伝わる遅れです。大きいほど先端が遅れてついてきます。")] public float RopeWhipDelay = 0.3f;
 
     private readonly List<GameObject> RopePieces = new List<GameObject>();
     private readonly List<Vector3> RopePositions = new List<Vector3>();
     private readonly List<Vector3> PrevRopePositions = new List<Vector3>();
 
-    [Tooltip("ロープ点の補正回数")] public int RopeConstraintIteration = 20;
+    [Tooltip("ロープの長さを固定する補正回数です。大きいほど伸びにくくなりますが、計算量が増えます。")] public int RopeConstraintIteration = 20;
 
     [Header("地面判定")]
-    [Tooltip("地面のレイヤー")] public LayerMask GroundLayer;
-    [Tooltip("レイを出す高さ")] public float GroundCheckHeight = 3.0f;
-    [Tooltip("地面から浮かせる高さ")] public float RopeGroundOffset = 0.05f;
+    [Tooltip("ロープの欠片が埋まらないように判定する地面レイヤーです。")] public LayerMask GroundLayer;
+    [Tooltip("地面判定用のレイを上から下へ飛ばす高さです。地面を検出しにくい場合は上げます。")] public float GroundCheckHeight = 3.0f;
+    [Tooltip("地面に当たった時、ロープを地面から少し浮かせる高さです。")] public float RopeGroundOffset = 0.05f;
 
     private Transform parent;
     private Transform ropeAnchor;
-    private Transform RopeTip;
 
     private Rigidbody connectedRb;
 
@@ -49,7 +48,6 @@ public class Player : MonoBehaviour
     private float currentSwingAngle;
     private float currentSwingDirection = -1f;
     private float SwingTimer;
-    private float WhipPower;
 
     private Vector3 previousRopeAnchorPosition;
 
@@ -89,7 +87,6 @@ public class Player : MonoBehaviour
         if (connectedRb != null)
         {
             UpdateRopeSwing();
-            UpdateWhipPower();
             UpdateRopePieces();
         }
     }
@@ -216,7 +213,6 @@ public class Player : MonoBehaviour
             parent = piece.transform;
         }
 
-        RopeTip = parent;
         UpdateRopePieces();
     }
 
@@ -229,7 +225,6 @@ public class Player : MonoBehaviour
 
         RopePieces.Clear();
         parent = RopePosition != null ? RopePosition.transform : transform;
-        RopeTip = parent;
     }
 
     private void UpdateRopePieces()
@@ -251,7 +246,6 @@ public class Player : MonoBehaviour
 
             RopePieces.Add(piece);
             parent = piece.transform;
-            RopeTip = parent;
         }
 
         while (RopePieces.Count > neededCount)
@@ -264,12 +258,10 @@ public class Player : MonoBehaviour
         if (RopePieces.Count > 0)
         {
             parent = RopePieces[RopePieces.Count - 1].transform;
-            RopeTip = parent;
         }
         else
         {
             parent = RopePosition != null ? RopePosition.transform : transform;
-            RopeTip = parent;
         }
 
         for (int i = 0; i < RopePieces.Count; i++)
@@ -309,17 +301,23 @@ public class Player : MonoBehaviour
 
         Vector3 anchorPosition = GetRopeAnchorPosition();
         Vector3 anchorVelocity = (anchorPosition - previousRopeAnchorPosition) / Time.fixedDeltaTime;
-        Vector3 ropeDriveVelocity = anchorVelocity;
         Vector3 objectStartPosition = connectedRb.position;
         Vector3 objectPosition = objectStartPosition;
         int ropeTipIndex = RopePositions.Count - 1;
-        float swingPowerRate = IsSwing ? 1f : WhipPower;
+        float swingPowerRate = IsSwing ? 1f : 0f;
+        float anchorObjectDistance = Vector3.Distance(anchorPosition, connectedRb.position);
+        bool isRopeTight = IsSwing || anchorObjectDistance >= RopeMaxDistance;
 
         //ロープ点を慣性で動かす
         for (int i = 1; i < RopePositions.Count; i++)
         {
             Vector3 current = RopePositions[i];
             Vector3 velocity = RopePositions[i] - PrevRopePositions[i];
+
+            if (!IsSwing)
+            {
+                velocity *= Mathf.Clamp01(RopeObjectDamping);
+            }
 
             PrevRopePositions[i] = current;
 
@@ -328,8 +326,12 @@ public class Player : MonoBehaviour
             if (swingPowerRate > 0.01f)
             {
                 float weight = (float)i / (RopePositions.Count - 1);
-                RopePositions[i] += ropeDriveVelocity * RopeWholeSwingForce * weight * swingPowerRate * Time.fixedDeltaTime;
+                RopePositions[i] += anchorVelocity * RopeWholeSwingForce * weight * swingPowerRate * Time.fixedDeltaTime;
                 RopePositions[i] += GetDelayedSwingArcVelocity(i, RopePositions.Count) * weight * swingPowerRate * Time.fixedDeltaTime;
+            }
+            else
+            {
+                RopePositions[i] += GetMoveTransmitVelocity(anchorVelocity, i) * Time.fixedDeltaTime;
             }
 
             RopePositions[i] = ClampToGround(RopePositions[i]);
@@ -374,48 +376,44 @@ public class Player : MonoBehaviour
 
             ClampRopeToMaxLength(anchorPosition);
 
-            //ロープ先端とオブジェクトの位置を一致させる
-            Vector3 tipToObject = objectPosition - RopePositions[ropeTipIndex];
-            float tipDistance = tipToObject.magnitude;
+            RopePositions[ropeTipIndex] = ClampToGround(RopePositions[ropeTipIndex]);
+        }
 
-            if (tipDistance > 0.000001f)
-            {
-                objectPosition = RopePositions[ropeTipIndex];
-                RopePositions[ropeTipIndex] = ClampToGround(RopePositions[ropeTipIndex]);
-            }
+        if (!IsSwing)
+        {
+            DampenRopeVelocity();
         }
 
         Vector3 ropeTipPosition = RopePositions[ropeTipIndex];
         Vector3 prevRopeTipPosition = PrevRopePositions[ropeTipIndex];
         Vector3 ropeTipVelocity = (ropeTipPosition - prevRopeTipPosition) / Time.fixedDeltaTime;
-        Vector3 correctionVelocity = (objectPosition - objectStartPosition) / Time.fixedDeltaTime;
-        Vector3 nextVelocity = correctionVelocity;
+        Vector3 dampingVelocity = connectedRb.velocity * Mathf.Clamp01(RopeObjectDamping);
+        Vector3 nextVelocity = dampingVelocity;
 
-        if (IsSwing || WhipPower > 0.01f)
+        if (isRopeTight)
+        {
+            objectPosition = ropeTipPosition;
+            Vector3 correctionVelocity = (objectPosition - objectStartPosition) / Time.fixedDeltaTime;
+            nextVelocity += correctionVelocity;
+        }
+
+        if (IsSwing)
         {
             nextVelocity += GetSwingTangentVelocity(ropeTipVelocity, ropeTipPosition) * RopeSwingForce;
         }
-
-        nextVelocity *= Mathf.Clamp01(RopeObjectDamping);
 
         if (nextVelocity.sqrMagnitude > RopeObjectMaxSpeed * RopeObjectMaxSpeed)
         {
             nextVelocity = nextVelocity.normalized * RopeObjectMaxSpeed;
         }
 
-        connectedRb.MovePosition(objectPosition);
-        connectedRb.velocity = nextVelocity;
-        previousRopeAnchorPosition = anchorPosition;
-    }
-
-    private Vector3 GetRopePosition()
-    {
-        if (RopePosition != null)
+        if (isRopeTight)
         {
-            return RopePosition.transform.position;
+            connectedRb.MovePosition(objectPosition);
         }
 
-        return transform.position;
+        connectedRb.velocity = nextVelocity;
+        previousRopeAnchorPosition = anchorPosition;
     }
 
     private Vector3 GetRopeAnchorPosition()
@@ -425,7 +423,12 @@ public class Player : MonoBehaviour
             return ropeAnchor.position;
         }
 
-        return GetRopePosition();
+        if (RopePosition != null)
+        {
+            return RopePosition.transform.position;
+        }
+
+        return transform.position;
     }
 
     private Vector3 GetRopeForward()
@@ -451,6 +454,24 @@ public class Player : MonoBehaviour
 
             RopePositions[i] = anchorPosition + fromAnchor.normalized * maxDistance;
             RopePositions[i] = ClampToGround(RopePositions[i]);
+        }
+    }
+
+    private Vector3 GetMoveTransmitVelocity(Vector3 anchorVelocity, int ropeIndex)
+    {
+        float decay = Mathf.Pow(Mathf.Clamp01(RopeForceDecay), ropeIndex - 1);
+
+        return anchorVelocity * RopeMoveTransmitPower * decay;
+    }
+
+    private void DampenRopeVelocity()
+    {
+        float damping = Mathf.Clamp01(RopeObjectDamping);
+
+        for (int i = 1; i < RopePositions.Count; i++)
+        {
+            Vector3 velocity = RopePositions[i] - PrevRopePositions[i];
+            PrevRopePositions[i] = RopePositions[i] - velocity * damping;
         }
     }
 
@@ -565,12 +586,15 @@ public class Player : MonoBehaviour
     {
         IsSwing = true;
         SwingTimer = 0;
-        WhipPower = 1;
-        currentSwingDirection = SwingRight ? 1f : -1f;
+        currentSwingDirection = AlwaysRightHandSwing ? 1f : (SwingRight ? 1f : -1f);
 
         swingStartAngle = currentSwingAngle;
         swingTargetAngle = currentSwingAngle + currentSwingDirection * 180f;
-        SwingRight = !SwingRight;
+
+        if (!AlwaysRightHandSwing)
+        {
+            SwingRight = !SwingRight;
+        }
     }
 
     private void UpdateRopeSwing()
@@ -592,11 +616,6 @@ public class Player : MonoBehaviour
         {
             IsSwing = false;
         }
-    }
-
-    private void UpdateWhipPower()
-    {
-        WhipPower = Mathf.MoveTowards(WhipPower, 0f, Time.deltaTime * WhipReturnSpeed);
     }
 
     private Vector3 ClampToGround(Vector3 position)

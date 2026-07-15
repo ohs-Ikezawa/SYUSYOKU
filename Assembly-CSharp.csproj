@@ -61,9 +61,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Script\Camera.cs" />
+    <Compile Include="Assets\Script\Test\TestPlayer.cs" />
+    <Compile Include="Assets\Script\Test\RopePiece.cs" />
     <Compile Include="Assets\Script\ReachableArea.cs" />
+    <Compile Include="Assets\Script\Player\Rope.cs" />
+    <Compile Include="Assets\Script\Test\RopeGenerator.cs" />
     <Compile Include="Assets\Script\Player\PlayerMove.cs" />
-    <Compile Include="Assets\Script\Player\Player.cs" />
+    <Compile Include="Assets\Script\Object\Object.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
