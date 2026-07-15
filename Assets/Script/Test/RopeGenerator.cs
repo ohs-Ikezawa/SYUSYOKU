@@ -35,7 +35,7 @@ public class RopeGenerator : MonoBehaviour
         new Keyframe(0.9f, 0.9f),
         new Keyframe(1f, 0.35f));
 
-    [Tooltip("指定角度へ到達した後、角速度を毎秒どれだけ減らすかを設定します。")]
+    [Tooltip("指定角度へ到達した後の減速開始時の強さです。停止へ近づくほど減速が緩やかになります。")]
     public float SwingFollowThroughDeceleration = 720f;
 
     [Tooltip("曲線の終端速度が小さい場合でも、フォロースルーを発生させる最低角速度です。")]
@@ -62,6 +62,14 @@ public class RopeGenerator : MonoBehaviour
     [Tooltip("現在の角速度から速度曲線の角速度へ滑らかに合流するまでの時間です。")]
     public float SwingVelocityBlendTime = 0.12f;
 
+    [Range(0f, 1f)]
+    [Tooltip("速度曲線のどの進行率から、移動による通常のロープ牽引を混ぜ始めるかを設定します。")]
+    public float SwingPullBlendStart = 0.8f;
+
+    [Range(0f, 1f)]
+    [Tooltip("指定角度へ到達した時点で、通常のロープ牽引をどの程度混ぜるかを設定します。")]
+    public float SwingPullBlendAtRotationEnd = 0.4f;
+
     [Tooltip("接続したオブジェクトの最大速度です。")]
     public float MaxObjectSpeed = 20f;
 
@@ -83,6 +91,10 @@ public class RopeGenerator : MonoBehaviour
     private bool nextSwingRight;
     private bool isSwinging;
     private bool isSwingFollowThrough;
+    private float swingFollowThroughStartVelocity;
+    private float swingFollowThroughElapsedTime;
+    private float swingFollowThroughDuration;
+    private float swingPullBlend;
     private Quaternion swingBaseHeadLocalRotation;
     private Vector3 swingUpAxis;
     private Vector3 swingStartDirection;
@@ -251,8 +263,18 @@ public class RopeGenerator : MonoBehaviour
         UpdateSaggingRope(start, end);
     }
 
-    private void ApplyPullForce(Vector3 headPosition, Vector3 headVelocity)
+    private void ApplyPullForce(
+        Vector3 headPosition,
+        Vector3 headVelocity,
+        float strengthMultiplier = 1f)
     {
+        strengthMultiplier = Mathf.Clamp01(strengthMultiplier);
+
+        if (strengthMultiplier <= 0f)
+        {
+            return;
+        }
+
         Vector3 toObject = connectRb.worldCenterOfMass - headPosition;
         float distance = toObject.magnitude;
 
@@ -268,7 +290,9 @@ public class RopeGenerator : MonoBehaviour
         Vector3 relativeVelocity = connectRb.velocity - headVelocity;
         float separatingSpeed = Mathf.Max(0f, Vector3.Dot(relativeVelocity, direction));
 
-        float pullAcceleration = stretch * PullStrength + separatingSpeed * PullDamping;
+        float pullAcceleration =
+            (stretch * PullStrength + separatingSpeed * PullDamping) *
+            strengthMultiplier;
         connectRb.AddForce(-direction * pullAcceleration, ForceMode.Acceleration);
     }
 
@@ -282,6 +306,8 @@ public class RopeGenerator : MonoBehaviour
         swingCurveArea = CalculateSwingCurveArea(1f);
         swingTravelAngle = 0f;
         isSwingFollowThrough = false;
+        swingFollowThroughElapsedTime = 0f;
+        swingPullBlend = 0f;
         swingDirection = nextSwingRight ? 1f : -1f;
 
         if (AlternateSwingDirection)
@@ -376,13 +402,37 @@ public class RopeGenerator : MonoBehaviour
 
         if (isSwingFollowThrough)
         {
-            swingAngularVelocity = Mathf.MoveTowards(
-                swingAngularVelocity,
+            float remainingTime = Mathf.Max(
                 0f,
-                Mathf.Max(0.01f, SwingFollowThroughDeceleration) *
-                Time.fixedDeltaTime);
+                swingFollowThroughDuration - swingFollowThroughElapsedTime);
+            float stepTime = Mathf.Min(Time.fixedDeltaTime, remainingTime);
+            float previousAngularVelocity = swingAngularVelocity;
 
-            swingTravelAngle += swingAngularVelocity * Time.fixedDeltaTime;
+            swingFollowThroughElapsedTime += stepTime;
+
+            float followThroughRate = swingFollowThroughDuration > 0.0001f
+                ? Mathf.Clamp01(
+                    swingFollowThroughElapsedTime / swingFollowThroughDuration)
+                : 1f;
+            float remainingRate = 1f - followThroughRate;
+
+            swingAngularVelocity =
+                swingFollowThroughStartVelocity *
+                remainingRate *
+                remainingRate;
+            swingTravelAngle +=
+                (previousAngularVelocity + swingAngularVelocity) *
+                0.5f *
+                stepTime;
+
+            float easedFollowThroughRate = Mathf.SmoothStep(
+                0f,
+                1f,
+                followThroughRate);
+            swingPullBlend = Mathf.Lerp(
+                Mathf.Clamp01(SwingPullBlendAtRotationEnd),
+                1f,
+                easedFollowThroughRate);
         }
         else
         {
@@ -411,13 +461,18 @@ public class RopeGenerator : MonoBehaviour
                 swingAngularVelocity * Time.fixedDeltaTime);
             swingTravelAngle += deltaAngle;
 
+            float blendStart = Mathf.Clamp01(SwingPullBlendStart);
+            float blendRate = blendStart >= 1f
+                ? (timeRate >= 1f ? 1f : 0f)
+                : Mathf.InverseLerp(blendStart, 1f, timeRate);
+            swingPullBlend =
+                Mathf.Clamp01(SwingPullBlendAtRotationEnd) *
+                Mathf.SmoothStep(0f, 1f, blendRate);
+
             if (remainingAngle <= deltaAngle + 0.0001f)
             {
                 swingTravelAngle = targetAngle;
-                swingAngularVelocity = Mathf.Max(
-                    swingAngularVelocity,
-                    Mathf.Max(0f, SwingMinimumFollowThroughSpeed));
-                isSwingFollowThrough = true;
+                BeginSwingFollowThrough();
             }
         }
 
@@ -437,14 +492,49 @@ public class RopeGenerator : MonoBehaviour
 
         ropeTipPosition = ClampOutsidePlayer(ropeTipPosition);
 
+        if (swingPullBlend > 0f)
+        {
+            ApplyPullForce(
+                RopeHead.transform.position,
+                currentHeadVelocity,
+                swingPullBlend);
+
+            Vector3 physicsContinuationPosition =
+                connectRb.position +
+                connectRb.velocity * Time.fixedDeltaTime;
+            ropeTipPosition = Vector3.Lerp(
+                ropeTipPosition,
+                physicsContinuationPosition,
+                Mathf.Clamp01(swingPullBlend));
+            ropeTipPosition = ClampOutsidePlayer(ropeTipPosition);
+        }
+
         UpdateSaggingRope(RopeHead.transform.position, ropeTipPosition);
 
         connectRb.MovePosition(ropeTipPosition);
 
-        if (isSwingFollowThrough && swingAngularVelocity <= 0.0001f)
+        if (isSwingFollowThrough &&
+            swingFollowThroughElapsedTime >= swingFollowThroughDuration)
         {
             FinishSwing();
         }
+    }
+
+    private void BeginSwingFollowThrough()
+    {
+        swingAngularVelocity = Mathf.Max(
+            swingAngularVelocity,
+            Mathf.Max(0f, SwingMinimumFollowThroughSpeed));
+        swingFollowThroughStartVelocity = swingAngularVelocity;
+        swingFollowThroughElapsedTime = 0f;
+
+        float deceleration = Mathf.Max(
+            0.01f,
+            SwingFollowThroughDeceleration);
+        swingFollowThroughDuration = Mathf.Max(
+            Time.fixedDeltaTime,
+            swingFollowThroughStartVelocity * 2f / deceleration);
+        isSwingFollowThrough = true;
     }
 
     private float EvaluateSwingSpeedCurve(float timeRate)
@@ -518,11 +608,6 @@ public class RopeGenerator : MonoBehaviour
         isSwinging = false;
         isSwingFollowThrough = false;
         swingAngularVelocity = 0f;
-
-        if (connectRb != null)
-        {
-            connectRb.velocity = Vector3.zero;
-        }
     }
 
     private void UpdateSwingRadius(float swingAngle)

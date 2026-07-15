@@ -492,7 +492,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   RopePiece: {fileID: 4759339567840039623, guid: be36555d8e056fc41ad4f1d696cf7c8b, type: 3}
   RopeHead: {fileID: 872186374}
-  RopeRange: 8
+  RopeRange: 6
   GenInterval: 0.2
   PieceDelay: 0
   DisablePieceColliders: 1
@@ -523,7 +523,7 @@ MonoBehaviour:
       outWeight: 0.3333339
     - serializedVersion: 3
       time: 0.7466644
-      value: 1.4182533
+      value: 1.4770683
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -531,17 +531,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.93666667
-      value: 0.63082
-      inSlope: -2.0460434
-      outSlope: -2.0460434
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.68117166
-      outWeight: 0
-    - serializedVersion: 3
       time: 1
-      value: 0.35
+      value: 0.23235473
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -560,6 +551,8 @@ MonoBehaviour:
   PreserveSwingMomentum: 1
   SwingMomentumDirectionThreshold: 20
   SwingVelocityBlendTime: 0.25
+  SwingPullBlendStart: 0.8
+  SwingPullBlendAtRotationEnd: 0.4
   MaxObjectSpeed: 20
   PlayerAvoidanceRadius: 1.25
 --- !u!114 &476855536
